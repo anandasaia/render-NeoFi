@@ -150,7 +150,7 @@ def share_note(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_note_history(request, id):
+def note_history(request, id):
     try:
         note = Note.objects.get(id=id, owner=request.user)
         history = NoteHistory.objects.filter(note=note).order_by('-edited_at')

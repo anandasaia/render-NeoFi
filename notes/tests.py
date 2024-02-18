@@ -271,3 +271,56 @@ class NoteAPITests_Advanced(APITestCase):
         url = reverse("note-history", kwargs={"id": self.note.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_registration_with_existing_username(self):
+        User.objects.create_user(
+            'existinguser', 'existingemail@example.com', 'password123')
+        url = reverse('signup')
+        data = {'username': 'existinguser',
+                'email': 'newemail@example.com', 'password': 'newpassword123'}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Username is already taken.', response.data['error'])
+
+    def test_registration_with_existing_email(self):
+        User.objects.create_user(
+            'newuser', 'existingemail@example.com', 'password123')
+        url = reverse('signup')
+        data = {'username': 'newuser2',
+                'email': 'existingemail@example.com', 'password': 'newpassword123'}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Email is already in use.', response.data['error'])
+
+
+class NoteAPITests_Advanced1(APITestCase):
+
+    def setUp(self):
+        # Create a test user
+        self.user = User.objects.create_user(
+            username='testuser', password='testpassword123')
+        # Create a token for the test user
+        self.token = Token.objects.create(user=self.user)
+        # Authenticate the test client with the user's token
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        # Create a test note owned by the test user
+        self.note = Note.objects.create(
+            title="Test Note", content="Original Content", owner=self.user)
+
+    def test_note_history(self):
+        # Update the note to generate history
+        update_data = {'title': 'Updated Test Note',
+                       'content': 'Updated Content'}
+        self.client.put(
+            reverse('update-note', kwargs={'id': self.note.id}), update_data, format='json')
+
+        # Attempt to fetch the note's history
+        response = self.client.get(
+            reverse('note-history', kwargs={'id': self.note.id}))
+
+        # Assert the response status code is 200 OK
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Assert the history is not empty
+        self.assertNotEqual(len(response.data), 0)
+        # Assert the content of the history matches the update
+        self.assertIn('Updated Content', response.data[0]['content'])
