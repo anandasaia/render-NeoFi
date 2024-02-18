@@ -21,7 +21,7 @@ from notes.views import login_user
 from notes.views import create_note
 from notes.views import get_note, update_note, delete_note
 from notes.views import share_note
-from notes.views import get_note_history
+from notes.views import note_history
 from django.urls import path, include, re_path
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
