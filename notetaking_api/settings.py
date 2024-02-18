@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'notes',
     'rest_framework',
     'rest_framework.authtoken',
-    'drf_yasg'
+    'drf_yasg',
     'dj_database_url'
 ]
 
